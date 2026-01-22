@@ -91,26 +91,18 @@ git clone https://github.com/BrettLechtenbrerg/investment-board-of-advisors.git
 
 ### For Windows Users:
 
-1. Make sure you have **Python 3** installed
-   - Download from [python.org/downloads](https://python.org/downloads) if needed
-   - During install, CHECK the box that says **"Add Python to PATH"**
-2. Open **Command Prompt** (search for "cmd" in Start menu)
-3. Navigate to the folder:
-   ```
-   cd Desktop\investment-board-of-advisors-main
-   ```
-4. Install requirements:
-   ```
-   pip install anthropic python-dotenv
-   ```
-5. Create a file called `.env` in the folder with this content:
-   ```
-   ANTHROPIC_API_KEY=sk-ant-your-key-here
-   ```
-6. Run the program:
-   ```
-   python main.py
-   ```
+1. Make sure you have **Python 3** installed FIRST:
+   - Download from [python.org/downloads](https://python.org/downloads)
+   - **IMPORTANT:** During install, CHECK the box that says **"Add Python to PATH"**
+   - Restart your computer after installing
+
+2. Open the `investment-board-of-advisors` folder
+3. **Double-click** `setup.bat`
+4. If Windows shows a security warning, click **"More info"** → **"Run anyway"**
+5. Follow the prompts:
+   - Enter your **first name** when asked
+   - **Paste your API key** when asked (the one starting with `sk-ant-...`)
+6. Done! A shortcut will be created on your Desktop!
 
 ---
 
@@ -125,10 +117,10 @@ Just **double-click** it to launch!
 
 ### For Windows Users:
 
-Navigate to the folder and run:
-```
-python main.py
-```
+After setup completes, you'll have a new shortcut on your Desktop called:
+**"[YourName]'s Investment Board"**
+
+Just **double-click** it to launch!
 
 ---
 
