@@ -12,6 +12,11 @@ Get personalized investment wisdom from AI versions of the world's greatest inve
 | 🧪 **Peter Lynch** | Growth Investing & Research |
 | 🌊 **Ray Dalio** | Macro Economics & Principles |
 | 📊 **John Bogle** | Index Investing & Low-Cost Strategy |
+| 📚 **Benjamin Graham** | Father of Value Investing & Margin of Safety |
+| 🌍 **George Soros** | Macro Trading & Reflexivity |
+| 📝 **Howard Marks** | Risk Assessment & Market Cycles |
+| ⚔️ **Carl Icahn** | Activist Investing & Corporate Governance |
+| 🚀 **Cathie Wood** | Disruptive Innovation & Growth |
 
 ## 🚀 Quick Start (3 Steps!)
 
@@ -74,7 +79,7 @@ This is an educational tool for entertainment purposes. These AI advisors are in
 
 Built with [Claude](https://anthropic.com) by Anthropic.
 
-Inspired by the investment wisdom of Warren Buffett, Peter Lynch, Ray Dalio, and John Bogle.
+Inspired by the investment wisdom of Warren Buffett, Peter Lynch, Ray Dalio, John Bogle, Benjamin Graham, George Soros, Howard Marks, Carl Icahn, and Cathie Wood.
 
 ## 📄 License
 
