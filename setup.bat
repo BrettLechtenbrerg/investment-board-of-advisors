@@ -89,27 +89,62 @@ if %errorlevel% neq 0 (
 )
 echo.
 
-REM Step 5: Create Desktop Shortcut
-echo Step 5 of 5: Creating Desktop Shortcut
-echo ---------------------------------------
+REM Step 5: Create Desktop Shortcut with Custom Icon
+echo Step 5 of 5: Creating Desktop Shortcut with Custom Icon
+echo --------------------------------------------------------
 
 set "DESKTOP=%USERPROFILE%\Desktop"
 set "SHORTCUT_NAME=%USER_NAME%'s Investment Board"
-set "BAT_FILE=%DESKTOP%\%SHORTCUT_NAME%.bat"
+set "LAUNCHER_BAT=%SCRIPT_DIR%launcher.bat"
+set "ICON_PATH=%SCRIPT_DIR%icon.ico"
 
-REM Create the launcher batch file
+REM Create the hidden launcher batch file in the install directory
 (
 echo @echo off
 echo title %USER_NAME%'s Investment Board
 echo cd /d "%SCRIPT_DIR%"
-echo echo.
-echo echo 💰  %USER_NAME%'s INVESTMENT BOARD  💰
-echo echo.
 echo python main.py
 echo pause
-) > "%BAT_FILE%"
+) > "%LAUNCHER_BAT%"
 
-echo ✅ Desktop shortcut created!
+REM Convert PNG to ICO using PowerShell (if icon.png exists)
+if exist "%SCRIPT_DIR%icon.png" (
+    echo Converting icon...
+    powershell -ExecutionPolicy Bypass -Command ^
+    "Add-Type -AssemblyName System.Drawing; ^
+    $img = [System.Drawing.Image]::FromFile('%SCRIPT_DIR%icon.png'); ^
+    $icon = [System.Drawing.Icon]::FromHandle($img.GetHicon()); ^
+    $stream = [System.IO.File]::Create('%ICON_PATH%'); ^
+    $icon.Save($stream); ^
+    $stream.Close(); ^
+    $img.Dispose()" >nul 2>&1
+)
+
+REM Create the desktop shortcut with icon using PowerShell
+echo Creating desktop shortcut with custom icon...
+powershell -ExecutionPolicy Bypass -Command ^
+"$WshShell = New-Object -ComObject WScript.Shell; ^
+$Shortcut = $WshShell.CreateShortcut('%DESKTOP%\%SHORTCUT_NAME%.lnk'); ^
+$Shortcut.TargetPath = '%LAUNCHER_BAT%'; ^
+$Shortcut.WorkingDirectory = '%SCRIPT_DIR%'; ^
+$Shortcut.Description = '%USER_NAME%''s Investment Board of Advisors'; ^
+if (Test-Path '%ICON_PATH%') { $Shortcut.IconLocation = '%ICON_PATH%' }; ^
+$Shortcut.Save()"
+
+if %errorlevel% equ 0 (
+    echo ✅ Desktop shortcut created with custom icon!
+) else (
+    echo ⚠️  Could not create shortcut with icon, creating basic shortcut...
+    REM Fallback to basic .bat file
+    (
+    echo @echo off
+    echo title %USER_NAME%'s Investment Board
+    echo cd /d "%SCRIPT_DIR%"
+    echo python main.py
+    echo pause
+    ) > "%DESKTOP%\%SHORTCUT_NAME%.bat"
+    echo ✅ Basic desktop shortcut created!
+)
 echo.
 
 REM Setup complete
@@ -134,6 +169,7 @@ echo ⚠️  DISCLAIMER: This is for educational purposes only.
 echo    This is NOT financial advice. Always consult professionals.
 echo.
 echo 📍 To launch: Double-click "%SHORTCUT_NAME%" on your Desktop
+echo    (Look for the gold shield icon!)
 echo.
 echo Or run from command prompt:
 echo   cd "%SCRIPT_DIR%"
