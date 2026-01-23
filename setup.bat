@@ -93,57 +93,95 @@ REM Step 5: Create Desktop Shortcut with Custom Icon
 echo Step 5 of 5: Creating Desktop Shortcut with Custom Icon
 echo --------------------------------------------------------
 
-set "DESKTOP=%USERPROFILE%\Desktop"
-set "SHORTCUT_NAME=%USER_NAME%'s Investment Board"
+REM Detect the REAL Desktop path (Windows 11 often uses OneDrive Desktop)
+set "DESKTOP="
+if exist "%USERPROFILE%\OneDrive\Desktop" (
+    set "DESKTOP=%USERPROFILE%\OneDrive\Desktop"
+    echo    Detected OneDrive Desktop folder
+) else if exist "%USERPROFILE%\Desktop" (
+    set "DESKTOP=%USERPROFILE%\Desktop"
+    echo    Detected standard Desktop folder
+) else (
+    REM Use PowerShell to get the actual Desktop path from registry
+    for /f "usebackq tokens=*" %%a in (`powershell -ExecutionPolicy Bypass -Command "[Environment]::GetFolderPath('Desktop')"`) do set "DESKTOP=%%a"
+)
+
+if "%DESKTOP%"=="" (
+    echo ⚠️  Could not find Desktop folder. Using default...
+    set "DESKTOP=%USERPROFILE%\Desktop"
+)
+
+echo    Desktop path: %DESKTOP%
+echo.
+
+set "SHORTCUT_NAME=%USER_NAME%s Investment Board"
 set "LAUNCHER_BAT=%SCRIPT_DIR%launcher.bat"
 set "ICON_PATH=%SCRIPT_DIR%icon.ico"
 
-REM Create the hidden launcher batch file in the install directory
+REM Create the launcher batch file in the install directory
 (
 echo @echo off
-echo title %USER_NAME%'s Investment Board
+echo title %USER_NAME%s Investment Board
 echo cd /d "%SCRIPT_DIR%"
 echo python main.py
 echo pause
 ) > "%LAUNCHER_BAT%"
 
+echo    Created launcher script...
+
 REM Convert PNG to ICO using PowerShell (if icon.png exists)
 if exist "%SCRIPT_DIR%icon.png" (
-    echo Converting icon...
+    echo    Converting icon from PNG to ICO...
     powershell -ExecutionPolicy Bypass -Command ^
-    "Add-Type -AssemblyName System.Drawing; ^
-    $img = [System.Drawing.Image]::FromFile('%SCRIPT_DIR%icon.png'); ^
-    $icon = [System.Drawing.Icon]::FromHandle($img.GetHicon()); ^
-    $stream = [System.IO.File]::Create('%ICON_PATH%'); ^
-    $icon.Save($stream); ^
-    $stream.Close(); ^
-    $img.Dispose()" >nul 2>&1
+    "try { ^
+        Add-Type -AssemblyName System.Drawing; ^
+        $img = [System.Drawing.Image]::FromFile('%SCRIPT_DIR%icon.png'); ^
+        $bmp = New-Object System.Drawing.Bitmap($img, 64, 64); ^
+        $icon = [System.Drawing.Icon]::FromHandle($bmp.GetHicon()); ^
+        $stream = [System.IO.File]::Create('%ICON_PATH%'); ^
+        $icon.Save($stream); ^
+        $stream.Close(); ^
+        $bmp.Dispose(); ^
+        $img.Dispose(); ^
+        Write-Host '    Icon converted successfully' ^
+    } catch { ^
+        Write-Host '    Icon conversion skipped (non-critical)' ^
+    }"
 )
 
-REM Create the desktop shortcut with icon using PowerShell
-echo Creating desktop shortcut with custom icon...
+REM Create the desktop shortcut using PowerShell
+echo    Creating desktop shortcut...
 powershell -ExecutionPolicy Bypass -Command ^
-"$WshShell = New-Object -ComObject WScript.Shell; ^
-$Shortcut = $WshShell.CreateShortcut('%DESKTOP%\%SHORTCUT_NAME%.lnk'); ^
-$Shortcut.TargetPath = '%LAUNCHER_BAT%'; ^
-$Shortcut.WorkingDirectory = '%SCRIPT_DIR%'; ^
-$Shortcut.Description = '%USER_NAME%''s Investment Board of Advisors'; ^
-if (Test-Path '%ICON_PATH%') { $Shortcut.IconLocation = '%ICON_PATH%' }; ^
-$Shortcut.Save()"
+"try { ^
+    $WshShell = New-Object -ComObject WScript.Shell; ^
+    $lnkPath = Join-Path '%DESKTOP%' '%SHORTCUT_NAME%.lnk'; ^
+    $Shortcut = $WshShell.CreateShortcut($lnkPath); ^
+    $Shortcut.TargetPath = '%LAUNCHER_BAT%'; ^
+    $Shortcut.WorkingDirectory = '%SCRIPT_DIR%'; ^
+    $Shortcut.Description = 'Investment Board of Advisors'; ^
+    $iconPath = '%ICON_PATH%'; ^
+    if (Test-Path $iconPath) { $Shortcut.IconLocation = $iconPath }; ^
+    $Shortcut.Save(); ^
+    Write-Host '    Shortcut saved to:' $lnkPath ^
+} catch { ^
+    Write-Host 'ERROR:' $_.Exception.Message ^
+    exit 1 ^
+}"
 
 if %errorlevel% equ 0 (
-    echo ✅ Desktop shortcut created with custom icon!
+    echo.
+    echo ✅ Desktop shortcut created!
 ) else (
-    echo ⚠️  Could not create shortcut with icon, creating basic shortcut...
-    REM Fallback to basic .bat file
+    echo.
+    echo ⚠️  PowerShell shortcut failed. Creating simple launcher instead...
     (
     echo @echo off
-    echo title %USER_NAME%'s Investment Board
+    echo title %USER_NAME%s Investment Board
     echo cd /d "%SCRIPT_DIR%"
     echo python main.py
     echo pause
     ) > "%DESKTOP%\%SHORTCUT_NAME%.bat"
-    echo ✅ Basic desktop shortcut created!
+    echo ✅ Fallback shortcut created on Desktop!
 )
 echo.
 
